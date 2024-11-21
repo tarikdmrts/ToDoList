@@ -4,18 +4,19 @@ class AddToDoVC: UIViewController {
 
     var toDoClosure: ((String) -> Void)?
     private let taskNameTextField = UITextField()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
     }
 
-    @objc func AddToDo() {
+    @objc func addToDo() {
         guard let newTask = taskNameTextField.text, !newTask.isEmpty else {
             showAlert()
             return
         }
         toDoClosure?(newTask)
+        taskNameTextField.text = ""
         navigationController?.popViewController(animated: true)
     }
     
@@ -30,7 +31,7 @@ class AddToDoVC: UIViewController {
         
         let addToDoButton = UIButton(type: .system)
         addToDoButton.setTitle("Add Task", for: .normal)
-        addToDoButton.addTarget(self, action: #selector(AddToDo), for: .touchUpInside)
+        addToDoButton.addTarget(self, action: #selector(addToDo), for: .touchUpInside)
         addToDoButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(addToDoButton)
         
@@ -41,7 +42,8 @@ class AddToDoVC: UIViewController {
             taskNameTextField.heightAnchor.constraint(equalToConstant: 50),
             
             addToDoButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            addToDoButton.topAnchor.constraint(equalTo: taskNameTextField.bottomAnchor,constant: 20)])
+            addToDoButton.topAnchor.constraint(equalTo: taskNameTextField.bottomAnchor, constant: 20)
+        ])
     }
     
     private func showAlert() {

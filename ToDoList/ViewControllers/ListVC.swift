@@ -1,36 +1,40 @@
 import UIKit
 
-class ListVC: UIViewController,UITableViewDelegate,UITableViewDataSource,TaskListDelegate {
-
-    var tasks : [(name: String, done:Bool)] = []
+class ListVC: UIViewController, UITableViewDelegate, UITableViewDataSource, TaskListDelegate {
+    
+    var tasks: [(name: String, done: Bool)] = []
     private let tableView = UITableView()
-
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return tasks.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "TaskCell",for: indexPath) as? TaskCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "TaskCell", for: indexPath) as? TaskCell else {
             return UITableViewCell()
         }
         let task = tasks[indexPath.row]
-        cell.configure(name: task.name,done:task.done)
+        cell.configure(name: task.name, done: task.done)
         cell.delegate = self
         cell.indexPath = indexPath
         return cell
     }
     
+    
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             tasks.remove(at: indexPath.row)
-            tableView.deleteRows(at: [indexPath], with: .automatic)
+            tableView.performBatchUpdates({
+                tableView.deleteRows(at: [indexPath], with: .automatic)
+            })
+            checkForEmptyState()
         }
     }
-
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
-
+    
     private func setupNavigationBar() {
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonTapped))
         navigationItem.rightBarButtonItem = addButton
@@ -50,11 +54,24 @@ class ListVC: UIViewController,UITableViewDelegate,UITableViewDataSource,TaskLis
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)])
     }
     
+    private func checkForEmptyState() {
+        if tasks.isEmpty {
+            let noTasksLabel = UILabel()
+            noTasksLabel.text = "No tasks available."
+            noTasksLabel.textAlignment = .center
+            noTasksLabel.frame = tableView.bounds
+            tableView.backgroundView = noTasksLabel
+        } else {
+            tableView.backgroundView = nil
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         setupNavigationBar()
         setupTableView()
+        checkForEmptyState()
         
         title = "To Do List"
     }
@@ -62,23 +79,20 @@ class ListVC: UIViewController,UITableViewDelegate,UITableViewDataSource,TaskLis
     @objc func addButtonTapped() {
         let addToDoVC = AddToDoVC()
         addToDoVC.toDoClosure = { [weak self] toDo in
-            self?.tasks.append((name: toDo, done: false))
-            self?.tableView.reloadData()
+            guard let self = self else { return }
+            self.tasks.append((name: toDo, done: false))
+            let indexPath = IndexPath(row: self.tasks.count - 1, section: 0)
+            self.tableView.insertRows(at: [indexPath], with: .automatic)
+            self.checkForEmptyState()
         }
         navigationController?.pushViewController(addToDoVC, animated: true)
     }
     
-    // TODO: Görev silindiğinde index hata veriyor. Uygulama çöküyor.
+    
     func taskisDoneUpdated(at index: Int, done: Bool) {
-        // Güncellenen görevin durumunu değiştirme
         tasks[index].done = done
-        
-        // Sadece değiştirilen satırı yeniden yükleme
         let indexPath = IndexPath(row: index, section: 0)
         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
-
-    
     
 }
-
