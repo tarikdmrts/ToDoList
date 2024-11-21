@@ -27,6 +27,7 @@ class ListVC: UIViewController, UITableViewDelegate, UITableViewDataSource, Task
             tableView.performBatchUpdates({
                 tableView.deleteRows(at: [indexPath], with: .automatic)
             })
+            saveTasks()
             checkForEmptyState()
         }
     }
@@ -68,7 +69,7 @@ class ListVC: UIViewController, UITableViewDelegate, UITableViewDataSource, Task
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        loadTasks()
         setupNavigationBar()
         setupTableView()
         checkForEmptyState()
@@ -93,6 +94,23 @@ class ListVC: UIViewController, UITableViewDelegate, UITableViewDataSource, Task
         tasks[index].done = done
         let indexPath = IndexPath(row: index, section: 0)
         tableView.reloadRows(at: [indexPath], with: .automatic)
+        saveTasks()
     }
+    
+    func saveTasks() {
+        let taskNames = tasks.map { $0.name }
+        let taskStatus = tasks.map { $0.done }
+        UserDefaults.standard.set(taskNames, forKey: "taskNames")
+        UserDefaults.standard.set(taskStatus, forKey: "taskStatus")
+    }
+    
+    func loadTasks() {
+        if let taskNames = UserDefaults.standard.array(forKey: "taskNames") as? [String],
+           let taskStatus = UserDefaults.standard.array(forKey: "taskStatus") as? [Bool] {
+            tasks = zip(taskNames, taskStatus).map { ($0, $1) }
+        }
+    }
+
+
     
 }
